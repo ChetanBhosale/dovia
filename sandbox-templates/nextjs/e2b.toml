@@ -1,0 +1,17 @@
+# This is a config for E2B sandbox template.
+# You can use template ID (7otm3ebwoarzd33m57b4) or template name (dovia) to create a sandbox:
+
+# Python SDK
+# from e2b import Sandbox, AsyncSandbox
+# sandbox = Sandbox("dovia") # Sync sandbox
+# sandbox = await AsyncSandbox.create("dovia") # Async sandbox
+
+# JS SDK
+# import { Sandbox } from 'e2b'
+# const sandbox = await Sandbox.create('dovia')
+
+team_id = "ac8d6f29-60bf-419b-b47b-c52812c4a6a9"
+start_cmd = "/compile_page.sh"
+dockerfile = "e2b.Dockerfile"
+template_name = "dovia"
+template_id = "7otm3ebwoarzd33m57b4"
