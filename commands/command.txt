@@ -1,1 +1,2 @@
 e2b template build --name dovia --cmd "./compile_page.sh"
+npx inngest-cli@latest dev
