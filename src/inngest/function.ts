@@ -2,7 +2,7 @@ import { inngest } from "./client";
 import { createAgent, createNetwork, createTool, gemini, Tool } from "@inngest/agent-kit";
 import {Sandbox} from '@e2b/code-interpreter'
 import { getSandbox, lastAssistantTextMessageContent } from "./utils";
-import {z} from 'zod'
+import {json, z} from 'zod'
 import { PROMPT } from "../../prompts/prompts";
 import prisma from "@/lib/db";
 import { MessageRole, MessageType } from "@/generated/prisma";
@@ -71,20 +71,27 @@ export const codeAgent = inngest.createFunction(
             )
           }) as any,
           handler : async ({files}, {step,network}:Tool.Options<AgentState>) => {
-            return await step?.run('createOrUpdateFiles', async () => {
+            const newFiles =  await step?.run('createOrUpdateFiles', async () => {
               try {
-                const updatedFiles = await network.state.data.files || {}
+                const updatedFiles = network.state.data.files || {}
+                console.log({updatedFiles})
                 const sandbox = await getSandbox(sandboxId);
                 for(const file of files){
                   await sandbox.files.write(file.path, file.content)
                   updatedFiles[file.path] = file.content
                 }
-                network.state.data.files = updatedFiles
+                console.log({updatedFiles})
                 return updatedFiles
               } catch (error) {
                 return `Error : ${error}`
               }
             })
+            if(typeof newFiles === 'object'){
+              network.state.data.files = newFiles as AgentState['files']
+              return JSON.stringify(newFiles)
+            }else {
+              return newFiles
+            }
           }
         }),
         createTool({
@@ -102,7 +109,7 @@ export const codeAgent = inngest.createFunction(
                   const content = await sandbox.files.read(file)
                   contents.push({path : file, content})
                 }
-                return contents
+                return JSON.stringify(contents)
               } catch (error) {
                 return `Error : ${error}`
               }
@@ -140,9 +147,15 @@ export const codeAgent = inngest.createFunction(
 
     // const { output } = await agentBrain.run(`BUILD : ${event.data.value}`);
     const result = await network.run(event.data.value)
+
     console.log({result})
 
+
+
+    console.log({files : result.state.data})
+
     const isError = !result.state.data.summary|| Object.keys(result.state.data.files || {}).length === 0
+
 
     const sandboxUrl =  await step.run("wait-for-sandbox", async () => {
       const sandbox = await getSandbox(sandboxId)
@@ -152,12 +165,14 @@ export const codeAgent = inngest.createFunction(
 
     // saving data here in prisma
     await step.run('save-result', async () => {
+      console.log({isError})
       if(isError){
         const response = await prisma.message.create({
           data : {
             content : "Something went wrong, please try again",
             role : MessageRole.ASSISTANT,
             type : MessageType.ERROR,
+            projectId : event.data.projectId
           }
         })
         return response
@@ -167,6 +182,7 @@ export const codeAgent = inngest.createFunction(
           content : result.state.data.summary,
           role : MessageRole.ASSISTANT,
           type : MessageType.RESULT,
+          projectId : event.data.projectId,
           fragment : {
             create : {
               sandboxUrl : sandboxUrl,
