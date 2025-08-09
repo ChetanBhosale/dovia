@@ -12,3 +12,4 @@ export async function testAI(value: string) {
 
   return { message: "message send to the inngest" };
 }
+
