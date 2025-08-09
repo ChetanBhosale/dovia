@@ -5,7 +5,6 @@ import { getSandbox, lastAssistantTextMessageContent } from "./utils";
 import {z} from 'zod'
 import { PROMPT } from "../../prompts/prompts";
 import prisma from "@/lib/db";
-import { ROLE, TYPE } from "@/constants";
 import { MessageRole, MessageType } from "@/generated/prisma";
 
 interface AgentState {
@@ -141,6 +140,7 @@ export const codeAgent = inngest.createFunction(
 
     // const { output } = await agentBrain.run(`BUILD : ${event.data.value}`);
     const result = await network.run(event.data.value)
+    console.log({result})
 
     const isError = !result.state.data.summary|| Object.keys(result.state.data.files || {}).length === 0
 
@@ -156,8 +156,8 @@ export const codeAgent = inngest.createFunction(
         const response = await prisma.message.create({
           data : {
             content : "Something went wrong, please try again",
-            role : ROLE.SYSTEM as MessageRole,
-            type : TYPE.ERROR as MessageType,
+            role : MessageRole.ASSISTANT,
+            type : MessageType.ERROR,
           }
         })
         return response
@@ -165,8 +165,8 @@ export const codeAgent = inngest.createFunction(
       const response = await prisma.message.create({
         data : {
           content : result.state.data.summary,
-          role : ROLE.SYSTEM as MessageRole,
-          type : TYPE.RESULT as MessageType,
+          role : MessageRole.ASSISTANT,
+          type : MessageType.RESULT,
           fragment : {
             create : {
               sandboxUrl : sandboxUrl,
