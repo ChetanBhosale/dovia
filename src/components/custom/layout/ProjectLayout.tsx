@@ -13,7 +13,7 @@ interface Props {
 const ProjectLayout = ({projectId} : Props) => {
 
   return (
-    <div className='h-screen w-screen'>
+    <div className='h-screen w-full'>
         <ResizablePanelGroup direction='horizontal' >
             <ResizablePanel
             defaultSize={35}

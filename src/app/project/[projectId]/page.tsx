@@ -7,11 +7,11 @@ import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query
 import React from 'react'
 
 interface Props {
-  params: { projectId: string }
+  params: Promise<{ projectId: string }>
 }
 
 const Page = async ({ params }: Props) => {
-  const { projectId } = params
+  const { projectId } = await params
 
   const queryClient = new QueryClient()
 

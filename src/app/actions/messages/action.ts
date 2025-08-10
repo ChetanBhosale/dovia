@@ -1,5 +1,7 @@
 'use server'
 
+import { MessageRole, MessageType } from "@/generated/prisma"
+import { inngest } from "@/inngest/client"
 import prisma from "@/lib/db"
 
 
@@ -10,7 +12,32 @@ export const getMessages = async (projectId : string) => {
         },
         include : {
             fragment : true
+        },
+        orderBy : {
+            createdAt : 'asc'
         }
     })
     return messages
+}
+
+
+export const createMessage = async (projectId:string,message:string) => {
+    const newMessage = await prisma.message.create({
+        data : {
+            projectId,
+            content : message,
+            role : MessageRole.USER,
+            type : MessageType.RESULT
+        }
+    })
+
+    await inngest.send({
+        name : "code-agent/run",
+        data : {
+            projectId,
+            value : newMessage.id
+        }
+    })
+
+    return newMessage
 }
