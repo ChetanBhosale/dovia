@@ -6,7 +6,8 @@ import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tansta
 export const useGetMessages = (projectId : string) => {
     return useQuery({
         queryKey : ["messages",{projectId}],
-        queryFn : async () => await getMessages(projectId)
+        queryFn : async () => await getMessages(projectId),
+        refetchInterval : 5000
     })
 }
 

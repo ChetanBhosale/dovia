@@ -1,16 +1,57 @@
 import { useGetProject } from '@/app/api/service/project'
-import React from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Fragment } from '@/generated/prisma'
+import { NavigationIcon, RefreshCcw } from 'lucide-react'
+import React, { useRef, useState } from 'react'
+import { toast } from 'sonner'
 
 interface Props {
-    projectId : string
+  fragment : Fragment | null
 }
 
-const ScreenView = ({projectId} : Props) => {
-    const {data,isLoading} = useGetProject(projectId)
+const ScreenView = ({fragment} : Props) => {
+
+  const [refresh,setRefresh] = useState(0)
+  
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+  function handleNavigate(){
+    if(fragment?.sandboxUrl){
+      window.open(fragment?.sandboxUrl, '_blank')
+    }
+  }
+
+  function handleCopyLink(){
+    if(fragment?.sandboxUrl){
+      navigator.clipboard.writeText(fragment?.sandboxUrl)
+      toast.success('Link copied to clipboard')
+    }
+  }
+
+  function handleRefresh(){
+    setRefresh(refresh + 1)
+  }
+
   return (
     <div>
-        {isLoading && <div>Loading...</div>}
-        {data && <div>{JSON.stringify(data)}</div>}
+        <div className='flex flex-col h-screen w-full '> 
+          <div className='flex py-2 px-4 justify-between'>
+            <div className='flex items-center gap-2'>
+            <Button onClick={handleRefresh} variant='outline' size='icon'>
+                <RefreshCcw />
+              </Button>
+              <span onClick={handleCopyLink} className='rounded-md p-2 w-fit text-sm border bg-muted' >{fragment?.sandboxUrl}</span>
+            </div>
+              
+              <Button onClick={handleNavigate} variant='outline' size='icon'>
+                <NavigationIcon />
+              </Button>
+
+          </div>
+          <div className='flex flex-col flex-1 min-h-0'>
+            <iframe loading='lazy' sandbox='allow-scripts allow-same-origin allow-forms' onLoad={handleRefresh} src={fragment?.sandboxUrl} className='flex-1 w-full h-full' />
+          </div>
+        </div>
     </div>
   )
 }
