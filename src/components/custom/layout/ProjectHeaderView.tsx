@@ -35,7 +35,7 @@ const ProjectHeaderView = ({projectId} : Props) => {
   return (
     <div className='p-4 bg-background border-b border-border sticky top-0 z-10'>
       <div className='flex items-center justify-between'>
-        {/* Logo placeholder */}
+
         <div className='flex items-center gap-3'>
           <Badge onClick={handleGoBack} className='text-red-300 cursor-pointer' />
           <div className='h-6 w-px bg-border'></div>
@@ -44,7 +44,6 @@ const ProjectHeaderView = ({projectId} : Props) => {
           </h1>
         </div>
 
-        {/* Dropdown Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className='flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground bg-secondary hover:bg-secondary/80 rounded-md transition-colors'>

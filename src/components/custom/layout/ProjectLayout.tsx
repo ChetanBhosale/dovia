@@ -6,6 +6,12 @@ import React, { Suspense, useState } from 'react'
 import MessageView from './MessageView'
 import ScreenView from './ScreenView'
 import { Fragment } from '@/generated/prisma'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { CodeIcon, EyeIcon, PlusIcon, Star } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import Link from 'next/link'
+import CodeView from '../message/CodeView'
+import FileExplorer, { FileCollection } from '../file-explorer'
 
 interface Props {
     projectId : string
@@ -14,6 +20,7 @@ interface Props {
 const ProjectLayout = ({projectId} : Props) => {
 
   const [activeFragment,setActiveFragment] = useState<Fragment | null>(null)
+  const [tabState,setTabState] = useState<'prev' | 'code'>('prev')
 
   return (
     <div className='h-screen w-full'>
@@ -32,9 +39,38 @@ const ProjectLayout = ({projectId} : Props) => {
             defaultSize={65}
             minSize={50}
             > 
-            {/* <Suspense fallback={<div>Loading...</div>}> */}
-              <ScreenView fragment={activeFragment} />
+            <Tabs
+            className='h-full gap-y-0' defaultValue='prev' value={tabState} onValueChange={(val) => setTabState(val as 'prev' | 'code')}>
+            <div className='w-full h-full items-center'>
+              <div className='flex w-full py-2 items-center justify-between border-b px-2'>
+                
+              
+              <TabsList className='h-8 p-0 border rounded-md'>
+                <TabsTrigger value='prev' className='rounded-md w-10 h-8'>
+                  <EyeIcon className='size-4' />
+                </TabsTrigger>
+                <TabsTrigger value='code' className='rounded-md w-10 h-8'>
+                  <CodeIcon className='size-4' />
+                </TabsTrigger>
+              </TabsList>
+              <div className='ml-auto flex items-center gap-x-2'>
+                <Button asChild size='sm' variant='default'>
+                  <Link href="/pricing">
+                    <Star className='size-4 mr-2' />
+                    <span className='text-xs'>Upgrade to Pro</span>
+                  </Link>
+                </Button>
+              </div>
+              </div>
+              <TabsContent value='prev'>
+                {!!activeFragment && <ScreenView fragment={activeFragment} />}
+              </TabsContent>
+              <TabsContent value='code' className='min-h-0 overflow-y-auto'>
+                {!!activeFragment && <FileExplorer files={activeFragment.files as FileCollection} />}
+              </TabsContent>
+            </div>
             {/* </Suspense> */}
+            </Tabs>
         </ResizablePanel>
 
         </ResizablePanelGroup>
