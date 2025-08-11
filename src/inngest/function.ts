@@ -1,9 +1,9 @@
 import { inngest } from "./client";
-import { createAgent, createNetwork, createTool, gemini, Tool } from "@inngest/agent-kit";
+import { Agent, createAgent, createNetwork, createState, createTool, gemini, type Message, Tool } from "@inngest/agent-kit";
 import {Sandbox} from '@e2b/code-interpreter'
 import { getSandbox, lastAssistantTextMessageContent } from "./utils";
 import {json, z} from 'zod'
-import { PROMPT } from "../../prompts/prompts";
+import { FRAGMENT_TITLE_PROMPT, PROMPT, RESPONSE_PROMPT } from "../../prompts/prompts";
 import prisma from "@/lib/db";
 import { MessageRole, MessageType } from "@/generated/prisma";
 
@@ -21,10 +21,43 @@ export const codeAgent = inngest.createFunction(
   },
   async ({ event, step }) => {
     // await step.sleep("wait-a-moment", "5s");
+    
     const sandboxId = await step.run("run-sandbox", async () => {
         const sandbox = await Sandbox.create('dovia')
         return sandbox.sandboxId
     });
+
+    console.log({sandboxId})
+
+    const previousMessages = await step.run('get-previous-messages', async () => {
+      const formatedMessages : Message[] = []
+
+      const messages = await prisma.message.findMany({
+        where : {
+          projectId : event.data.projectId
+        },
+        orderBy : {
+          createdAt : 'asc'
+        }
+      })
+      let index = 1
+      for(const message of messages){
+        formatedMessages.push({
+          type : "text",
+          role : message.role === MessageRole.ASSISTANT ? "assistant" : "user",
+          content : `${index++} Message : ${message.content}`
+        })
+      }
+      return formatedMessages
+    })
+
+    const state = createState<AgentState>({
+      summary : "",
+      files : {}
+    },
+    {
+      messages : previousMessages
+    })
 
     const agentBrain = createAgent<AgentState>({
       name: "agent-brain",
@@ -74,13 +107,11 @@ export const codeAgent = inngest.createFunction(
             const newFiles =  await step?.run('createOrUpdateFiles', async () => {
               try {
                 const updatedFiles = network.state.data.files || {}
-                console.log({updatedFiles})
                 const sandbox = await getSandbox(sandboxId);
                 for(const file of files){
                   await sandbox.files.write(file.path, file.content)
                   updatedFiles[file.path] = file.content
                 }
-                console.log({updatedFiles})
                 return updatedFiles
               } catch (error) {
                 return `Error : ${error}`
@@ -95,12 +126,13 @@ export const codeAgent = inngest.createFunction(
           }
         }),
         createTool({
-          name : "readFile",
-          description : "Read files from the sandbox",
+          name : "readFiles",
+          description : "Read one or more files from the sandbox. IMPORTANT: You must provide a 'files' parameter with an array of file paths. Example: readFile({files: ['src/app.js', 'package.json']})",
           parameters : z.object({
-            files : z.array(z.string())
+            files : z.array(z.string()).describe('Read one or more files from the sandbox. IMPORTANT: You must provide a "files" parameter with an array of file paths. Example: readFile({files: ["src/app.js", "package.json"]})')
           }) as any,
           handler : async({files}, {step,network}) => {
+            console.log({files})
             return await step?.run('readFile', async () => {
               try {
                 const sandbox = await getSandbox(sandboxId)
@@ -132,10 +164,25 @@ export const codeAgent = inngest.createFunction(
       }
     });
 
+    const fragmentTitleAgent = createAgent<AgentState>({
+      name : "fragment-title-agent",
+      model : gemini({model : "gemini-2.5-flash"}),
+      description : "Provide Fragemtn Tiltes",
+      system : FRAGMENT_TITLE_PROMPT
+    })
+
+    const responseAgent = createAgent<AgentState>({
+      name : "response-agent",
+      model : gemini({model : "gemini-2.5-flash"}),
+      description : "Provide a response to the user",
+      system : RESPONSE_PROMPT
+    })
+
     const network = createNetwork<AgentState>({
       name : "coding-agent-network",
       agents : [agentBrain],
       maxIter : 15,
+      defaultState : state,
       router : async ({network}) => {
         const summary = network.state.data.summary
         if(summary){
@@ -146,15 +193,45 @@ export const codeAgent = inngest.createFunction(
     })
 
     // const { output } = await agentBrain.run(`BUILD : ${event.data.value}`);
-    const result = await network.run(event.data.value)
+    const result = await network.run(event.data.value , {
+      state : state
+    })
 
-    console.log({result})
+
+    const {output : fragemtnTitleOutput} = await fragmentTitleAgent.run(result.state.data.summary)
+    const {output : responseOutput} = await responseAgent.run(result.state.data.summary)
+
+    console.log({fragemtnTitleOutput, responseOutput})
 
 
 
-    console.log({files : result.state.data})
+    const generateFragmentTitle = () => {
+      if(fragemtnTitleOutput[0].type !== "text"){
+        return "Fragment"
+      }
 
-    const isError = !result.state.data.summary|| Object.keys(result.state.data.files || {}).length === 0
+      if(fragemtnTitleOutput[0].type === "text" && fragemtnTitleOutput[0].content){
+        return fragemtnTitleOutput[0].content as string
+      }
+
+      return "Fragment"
+    }
+
+    const generateResponse = () => {
+      if(responseOutput[0].type !== "text"){
+        return "Here is the updated code you asked for"
+      }
+
+      if(responseOutput[0].type === "text" && responseOutput[0].content){
+        return responseOutput[0].content as string
+      }
+
+      return "Updated Code"
+    }
+
+
+    const isError = !result.state.data.summary || Object.keys(result.state.data.files || {}).length === 0
+    console.log({isError})
 
 
     const sandboxUrl =  await step.run("wait-for-sandbox", async () => {
@@ -165,7 +242,6 @@ export const codeAgent = inngest.createFunction(
 
     // saving data here in prisma
     await step.run('save-result', async () => {
-      console.log({isError})
       if(isError){
         const response = await prisma.message.create({
           data : {
@@ -179,14 +255,14 @@ export const codeAgent = inngest.createFunction(
       }else{
       const response = await prisma.message.create({
         data : {
-          content : result.state.data.summary,
+          content : generateResponse(),
           role : MessageRole.ASSISTANT,
           type : MessageType.RESULT,
           projectId : event.data.projectId,
           fragment : {
             create : {
               sandboxUrl : sandboxUrl,
-              title : "Fragments",
+              title : generateFragmentTitle(),
               files : result.state.data.files
             }
           }
