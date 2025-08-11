@@ -23,6 +23,8 @@ const MessageView = ({projectId,setActiveFragment,activeFragment} : Props) => {
     }
  },[data?.length])
 
+ const lastAssistantMessageRef = useRef<string | null>(null)
+
 //  useEffect(() => {
 //     if(Array.isArray(data) && data.length > 0){
 //         let findLastMessageWithFragment = data.findLast((message) => message.fragment && message.role == MessageRole.ASSISTANT)
@@ -31,6 +33,18 @@ const MessageView = ({projectId,setActiveFragment,activeFragment} : Props) => {
 //         }
 //     }
 //  },[data])
+
+useEffect(() => {
+    const lastAssistantMessage = data?.findLast((message) => message.role == MessageRole.ASSISTANT && message.fragment)
+    console.log({lastAssistantMessage})
+    if(
+        lastAssistantMessage?.fragment &&
+        lastAssistantMessage?.id !== lastAssistantMessageRef.current
+    ){
+        setActiveFragment(lastAssistantMessage.fragment)
+        lastAssistantMessageRef.current = lastAssistantMessage.id
+    }
+},[data])
 
  const lastMessage = data?.[data.length - 1]
  const isLastMessageUser = lastMessage?.role == MessageRole.USER

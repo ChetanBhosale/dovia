@@ -37,7 +37,7 @@ const ScreenView = ({fragment} : Props) => {
   return (
     <div>
         <div className='flex flex-col h-screen w-full '> 
-          <div className='flex mt-3 justify-between'>
+          <div className='flex py-2 justify-between px-2'>
             <div className='flex items-center gap-2'>
             <Button onClick={handleRefresh} variant='outline' size='icon'>
                 <RefreshCcw />
