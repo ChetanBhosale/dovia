@@ -4,12 +4,16 @@ import { MessageRole, MessageType } from "@/generated/prisma"
 import { inngest } from "@/inngest/client"
 import prisma from "@/lib/db"
 import { generateSlug } from "random-word-slugs"
+import { handleAuth } from "../auth/handleAuth"
 
 export const createProject = async (value: string) => {
+    const user = await handleAuth()
+    console.log({user})
     const slug = generateSlug(2, { format: "kebab" })
 
+
     const project = await prisma.project.create({
-        data: { name: slug }
+        data: { name: slug, userId: user.id }
     })
 
     await prisma.message.create({
@@ -38,10 +42,16 @@ export const createProject = async (value: string) => {
 
 
 export const getProject = async (projectId : string) => {
+    const user = await handleAuth()
+    console.log({user})
     const project = await prisma.project.findUnique({
         where : {
-            id : projectId
+            id : projectId,
+            userId : user.id
         }
     })
+    if(!project){
+        throw new Error('No Project Found, Please create a new project')
+    }
     return project
 }

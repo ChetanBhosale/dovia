@@ -4,6 +4,7 @@ import "./globals.css";
 import TanStackProvider from "./provider/TanStackProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "next-themes";
+import {ClerkProvider} from "@clerk/nextjs";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,6 +30,7 @@ export default function RootLayout({
 
 
   return (
+  <ClerkProvider>
     <html lang="en" suppressHydrationWarning>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -46,5 +48,6 @@ export default function RootLayout({
           </ThemeProvider>
         </body>
     </html>
+    </ClerkProvider>
   );
 }

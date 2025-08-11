@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import CodeView from '../message/CodeView'
 import FileExplorer, { FileCollection } from '../file-explorer'
+import UserController from '../navbar/user-controller'
 
 interface Props {
     projectId : string
@@ -60,6 +61,7 @@ const ProjectLayout = ({projectId} : Props) => {
                     <span className='text-xs'>Upgrade to Pro</span>
                   </Link>
                 </Button>
+                <UserController showName={false} />
               </div>
               </div>
               <TabsContent value='prev'>
