@@ -1,5 +1,6 @@
 import { Loader2 } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
+import { Logo } from '../navbar/logo'
 
 const MessageLoading = () => {
   const messages = [
@@ -23,7 +24,7 @@ const MessageLoading = () => {
   return (
     <div className='flex flex-col group px-2 pb-4'>
     <div className='flex items-center gap-2 pl-8.5'>
-        <span className='text-base text-muted-foreground animate-pulse  '>{messages[currentMessage]}</span>
+        <span className='text-base text-muted-foreground animate-pulse whitespace-pre-wrap flex items-center gap-2'><Logo push={false} /> {messages[currentMessage]}</span>
         <Loader2 className='w-4 h-4 animate-spin text-muted-foreground' />
     </div>
     </div>

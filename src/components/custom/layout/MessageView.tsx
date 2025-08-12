@@ -7,6 +7,7 @@ import { Fragment, MessageRole } from '@/generated/prisma'
 import MessageForm from '../message/MessageForm'
 import MessageLoading from '../message/MessageLoading'
 import ProjectHeaderView from './ProjectHeaderView'
+import MessageLoader from '../Loaders/MessageLoader'
 
 interface Props {
     projectId : string
@@ -51,10 +52,10 @@ useEffect(() => {
 
   return (
     <div className='flex flex-col flex-1 h-full'>
-        <div className='flex-1 min-h-0 overflow-y-auto z-0'>
+        <div className='flex-1 z-0'>
             <ProjectHeaderView projectId={projectId} />
-            <div className='pt-2 pr-1'>
-            {isLoading && <div>Loading...</div>}
+            <div className='min-h-0 flex flex-col pt-3 overflow-y-auto'>
+            {isLoading && <MessageLoader />}
             {data && data.map((message,index) => (
                 <MessageCard 
                     key={index}

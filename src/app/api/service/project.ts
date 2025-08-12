@@ -1,6 +1,6 @@
 'use client'
 
-import { createProject, getProject } from "@/app/actions/projects/action"
+import { createProject, getProject, getUserProjects } from "@/app/actions/projects/action"
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
 
 
@@ -23,5 +23,13 @@ export const useGetProject = (projectId : string) => {
     return useSuspenseQuery({
         queryKey : ["project",projectId],
         queryFn : async () => await getProject(projectId)
+    })
+}
+
+export const useGetUserProjects = () => {
+    return useQuery({
+        queryKey: ["user-projects"],
+        queryFn: async () => await getUserProjects(),
+        staleTime: 1000 * 60 * 5, // 5 minutes
     })
 }

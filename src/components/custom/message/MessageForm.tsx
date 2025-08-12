@@ -1,14 +1,14 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { Form, useForm } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import TextareaAutosize from 'react-textarea-autosize'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { FormField } from '@/components/ui/form'
+import { FormField, Form } from '@/components/ui/form'
 import { ArrowUpIcon, Loader2 } from 'lucide-react'
 import { useCreateMessage } from '@/app/api/service/message'
 
@@ -52,12 +52,15 @@ const MessageForm = ({ projectId }: MessageFormProps) => {
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className={cn(
-                'relative border rounded-xl bg-background transition-all duration-200',
-                isFocused && "border-primary/50 shadow-sm shadow-primary/10",
-                showUsages && "border-muted",
-                !isFocused && "border-border hover:border-border/80"
-            )}>
+            <form 
+                onSubmit={form.handleSubmit(onSubmit)} 
+                className={cn(
+                    'relative border rounded-xl bg-background transition-all duration-200 bg-muted',
+                    isFocused && "border-primary/50 shadow-sm shadow-primary/10",
+                    showUsages && "border-muted",
+                    !isFocused && "border-border hover:border-border/80"
+                )}
+            >
                 <FormField
                     control={form.control}
                     name='value'

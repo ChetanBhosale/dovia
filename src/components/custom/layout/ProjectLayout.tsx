@@ -27,7 +27,7 @@ const ProjectLayout = ({projectId} : Props) => {
     <div className='h-screen w-full'>
         <ResizablePanelGroup direction='horizontal' >
             <ResizablePanel
-            defaultSize={35}
+            defaultSize={25}
             minSize={20}
             >
           {/* <ProjectHeaderView project={projectId} /> */}
@@ -37,7 +37,7 @@ const ProjectLayout = ({projectId} : Props) => {
         </ResizablePanel>  
         <ResizableHandle withHandle={true} />
         <ResizablePanel
-            defaultSize={65}
+            defaultSize={75}
             minSize={50}
             > 
             <Tabs
@@ -55,17 +55,17 @@ const ProjectLayout = ({projectId} : Props) => {
                 </TabsTrigger>
               </TabsList>
               <div className='ml-auto flex items-center gap-x-2'>
-                <Button asChild size='sm' variant='default'>
+                {/* <Button asChild size='sm' variant='default'>
                   <Link href="/pricing">
                     <Star className='size-4 mr-2' />
-                    <span className='text-xs'>Upgrade to Pro</span>
+                    <span className='text-xs'>Choose Model</span>
                   </Link>
-                </Button>
+                </Button> */}
                 <UserController showName={false} />
               </div>
               </div>
               <TabsContent value='prev'>
-                {!!activeFragment && <ScreenView fragment={activeFragment} />}
+                {!!activeFragment && <ScreenView fragment={activeFragment} projectId={projectId} />}
               </TabsContent>
               <TabsContent value='code' className='min-h-0 overflow-y-auto'>
                 {!!activeFragment && <FileExplorer files={activeFragment.files as FileCollection} />}

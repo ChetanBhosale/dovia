@@ -5,10 +5,10 @@ import { inngest } from "@/inngest/client"
 import prisma from "@/lib/db"
 import { generateSlug } from "random-word-slugs"
 import { handleAuth } from "../auth/handleAuth"
+import { redirect } from "next/navigation"
 
 export const createProject = async (value: string) => {
     const user = await handleAuth()
-    console.log({user})
     const slug = generateSlug(2, { format: "kebab" })
 
 
@@ -43,7 +43,6 @@ export const createProject = async (value: string) => {
 
 export const getProject = async (projectId : string) => {
     const user = await handleAuth()
-    console.log({user})
     const project = await prisma.project.findUnique({
         where : {
             id : projectId,
@@ -51,7 +50,22 @@ export const getProject = async (projectId : string) => {
         }
     })
     if(!project){
-        throw new Error('No Project Found, Please create a new project')
+        redirect('/not-found')
     }
     return project
+}
+
+export const getUserProjects = async () => {
+    const user = await handleAuth()
+    
+    const projects = await prisma.project.findMany({
+        where: {
+            userId: user.id
+        },
+        orderBy: {
+            updatedAt: 'desc'
+        }
+    })
+    
+    return projects
 }

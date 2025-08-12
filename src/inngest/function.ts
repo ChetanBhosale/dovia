@@ -1,5 +1,5 @@
 import { inngest } from "./client";
-import { Agent, createAgent, createNetwork, createState, createTool, gemini, type Message, Tool } from "@inngest/agent-kit";
+import { Agent, createAgent, createNetwork, createState, createTool, gemini, type Message, openai, Tool } from "@inngest/agent-kit";
 import {Sandbox} from '@e2b/code-interpreter'
 import { getSandbox, lastAssistantTextMessageContent } from "./utils";
 import {json, z} from 'zod'
@@ -22,12 +22,18 @@ export const codeAgent = inngest.createFunction(
   async ({ event, step }) => {
     // await step.sleep("wait-a-moment", "5s");
     
-    const sandboxId = await step.run("run-sandbox", async () => {
+    let sandboxId = ""
+
+    if(event.data.sandBoxId){
+      sandboxId = event.data.sandBoxId
+    }else{
+      sandboxId = await step.run("run-sandbox", async () => {
         const sandbox = await Sandbox.create('dovia')
         return sandbox.sandboxId
-    });
+      })
+    }
 
-    console.log({sandboxId})
+    console.log({sandboxId, event : event.data})
 
     const previousMessages = await step.run('get-previous-messages', async () => {
       const formatedMessages : Message[] = []
@@ -68,7 +74,7 @@ export const codeAgent = inngest.createFunction(
       tools: [
         createTool({
           name: 'terminal',
-          description: 'Use this tool to run terminal commands',
+          description: 'Use this tool to run terminal commands, you are using terminal command in sandbox, IMPORTANT : You must provide a "command" parameter with the command to run in the terminal',
           parameters: z.object({
             command : z.string().describe('The command to run in the terminal'),
           }) as any,
@@ -167,6 +173,7 @@ export const codeAgent = inngest.createFunction(
     const fragmentTitleAgent = createAgent<AgentState>({
       name : "fragment-title-agent",
       model : gemini({model : "gemini-2.5-flash"}),
+      // model : openai({model : "gpt-4o", defaultParameters : {temperature : 0.1}}),
       description : "Provide Fragemtn Tiltes",
       system : FRAGMENT_TITLE_PROMPT
     })
@@ -174,6 +181,7 @@ export const codeAgent = inngest.createFunction(
     const responseAgent = createAgent<AgentState>({
       name : "response-agent",
       model : gemini({model : "gemini-2.5-flash"}),
+      // model : openai({model : "gpt-4o", defaultParameters : {temperature : 0.1}}),
       description : "Provide a response to the user",
       system : RESPONSE_PROMPT
     })
@@ -205,6 +213,8 @@ export const codeAgent = inngest.createFunction(
 
 
 
+    console.log(fragemtnTitleOutput[0])
+
     const generateFragmentTitle = () => {
       if(fragemtnTitleOutput[0].type !== "text"){
         return "Fragment"
@@ -234,11 +244,14 @@ export const codeAgent = inngest.createFunction(
     console.log({isError})
 
 
+    console.time('wait-for-sandbox-url')
     const sandboxUrl =  await step.run("wait-for-sandbox", async () => {
       const sandbox = await getSandbox(sandboxId)
       const host =  sandbox.getHost(3000)
       return `https://${host}`
     })
+    console.timeEnd('wait-for-sandbox-url')
+
 
     // saving data here in prisma
     await step.run('save-result', async () => {
@@ -251,8 +264,33 @@ export const codeAgent = inngest.createFunction(
             projectId : event.data.projectId
           }
         })
+
+        if(!event.data.sandBoxId){
+          await prisma.project.update({
+            where : {
+              id : event.data.projectId,
+            },
+            data : {
+              sandboxId : sandboxId,
+              sandboxUrl : sandboxUrl
+            }
+          })
+        }
         return response
       }else{
+
+        if(!event.data.sandBoxId){
+          await prisma.project.update({
+            where : {
+              id : event.data.projectId
+            },
+            data : {
+              sandboxId : sandboxId,
+              sandboxUrl : sandboxUrl
+            }
+          })
+        }
+
       const response = await prisma.message.create({
         data : {
           content : generateResponse(),
@@ -261,7 +299,6 @@ export const codeAgent = inngest.createFunction(
           projectId : event.data.projectId,
           fragment : {
             create : {
-              sandboxUrl : sandboxUrl,
               title : generateFragmentTitle(),
               files : result.state.data.files
             }

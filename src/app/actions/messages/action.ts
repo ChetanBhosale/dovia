@@ -48,7 +48,8 @@ export const createMessage = async (projectId:string,message:string) => {
         name : "code-agent/run",
         data : {
             projectId,
-            value : newMessage.id
+            value : newMessage.id,
+            sandBoxId : project?.sandboxId ?? null
         }
     })
 

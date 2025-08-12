@@ -4,6 +4,7 @@ import { AirVent, Badge } from 'lucide-react'
 import { format } from 'date-fns'
 import React from 'react'
 import FragmentCard from './FragmentCard'
+import { Logo } from '../navbar/logo'
 
 interface AssistantMessageProps {
     content: string
@@ -24,13 +25,12 @@ const AssistantMessage = ({
 } : AssistantMessageProps) => {
   return (
     <div className={cn(("flex flex-col gap-2 group px-2 pb-4"),type === MessageType.ERROR && "text-red-700 hover:text-red-700")}>
-        <div className='flex items-center gap-2 pl-2 mb-2'>
-            <Badge className='text-red-300' />
-            <span className='text-sm font-medium'>Dovia</span>
-            <span className='text-xs text-muted-foreground'>{format(createdAt, 'MMM d, yyyy')}</span>
+        <div className='flex items-center gap-2 pl-2'>
+            <Logo push={false} />
+            <span className='text-xs text-muted-foreground font-bold'>{format(createdAt, 'MMM d, yyyy')}</span>
         </div>
-        <div className='pl-8.5 flex flex-col gap-2'>
-            <span>{content}</span>
+        <div className='pl-8.5 flex flex-col gap-2 p-2'>
+            <span className='text-sm whitespace-pre-wrap'>{content}</span>
             <FragmentCard fragment={fragment} isActiveFragment={isActiveFragment} onFragmentClick={onFragmentClick} />
         </div>
     </div>
