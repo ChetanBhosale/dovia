@@ -24,8 +24,8 @@ const ProjectLayout = ({projectId} : Props) => {
   const [tabState,setTabState] = useState<'prev' | 'code'>('prev')
 
   return (
-    <div className='h-screen w-full'>
-        <ResizablePanelGroup direction='horizontal' >
+    <div className='max-h-screen min-h-screen w-full'>
+        <ResizablePanelGroup direction='horizontal' className='max-h-screen min-h-screen' >
             <ResizablePanel
             defaultSize={25}
             minSize={20}

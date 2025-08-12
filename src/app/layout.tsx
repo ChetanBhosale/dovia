@@ -26,13 +26,13 @@ const chango = Chango({
 });
 
 export const metadata: Metadata = {
-  title: "Dovia.AI",
-  description: "Dovia.AI is a platform for building and deploying AI-powered applications.",
+  title: "Dovia",
+  description: "Dovia is a platform for building and deploying AI-powered applications.",
   icons: {
     icon: "/favicon.ico",
   },
   openGraph: {
-    title: "Dovia.AI",
+    title: "Dovia",
     description: "Dovia.AI is a platform for building and deploying AI-powered applications.",
   },
 };

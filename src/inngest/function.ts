@@ -1,7 +1,7 @@
 import { inngest } from "./client";
 import { Agent, createAgent, createNetwork, createState, createTool, gemini, type Message, openai, Tool } from "@inngest/agent-kit";
 import {Sandbox} from '@e2b/code-interpreter'
-import { getSandbox, lastAssistantTextMessageContent } from "./utils";
+import { getSandbox, lastAssistantTextMessageContent, SANDBOX_TIMEOUT } from "./utils";
 import {json, z} from 'zod'
 import { FRAGMENT_TITLE_PROMPT, PROMPT, RESPONSE_PROMPT } from "../../prompts/prompts";
 import prisma from "@/lib/db";
@@ -20,7 +20,8 @@ export const codeAgent = inngest.createFunction(
     event: "code-agent/run",
   },
   async ({ event, step }) => {
-    // await step.sleep("wait-a-moment", "5s");
+    try {
+
     
     let sandboxId = ""
 
@@ -29,6 +30,7 @@ export const codeAgent = inngest.createFunction(
     }else{
       sandboxId = await step.run("run-sandbox", async () => {
         const sandbox = await Sandbox.create('dovia')
+        await sandbox.setTimeout(SANDBOX_TIMEOUT)
         return sandbox.sandboxId
       })
     }
@@ -43,8 +45,9 @@ export const codeAgent = inngest.createFunction(
           projectId : event.data.projectId
         },
         orderBy : {
-          createdAt : 'asc'
-        }
+          createdAt : 'desc'
+        },
+        take : 7
       })
       let index = 1
       for(const message of messages){
@@ -54,7 +57,7 @@ export const codeAgent = inngest.createFunction(
           content : `${index++} Message : ${message.content}`
         })
       }
-      return formatedMessages
+      return formatedMessages.reverse()
     })
 
     const state = createState<AgentState>({
@@ -74,7 +77,7 @@ export const codeAgent = inngest.createFunction(
       tools: [
         createTool({
           name: 'terminal',
-          description: 'Use this tool to run terminal commands, you are using terminal command in sandbox, IMPORTANT : You must provide a "command" parameter with the command to run in the terminal',
+          description: 'Use this tool to run terminal commands, you are using terminal command in sandbox, IMPORTANT : You must provide a "command" parameter with the command to run in the terminal, you need to understand the current project first and for that you need to read file and also you need to go to all dependencies and understand those..',
           parameters: z.object({
             command : z.string().describe('The command to run in the terminal'),
           }) as any,
@@ -205,7 +208,6 @@ export const codeAgent = inngest.createFunction(
       state : state
     })
 
-
     const {output : fragemtnTitleOutput} = await fragmentTitleAgent.run(result.state.data.summary)
     const {output : responseOutput} = await responseAgent.run(result.state.data.summary)
 
@@ -310,5 +312,27 @@ export const codeAgent = inngest.createFunction(
     })
 
     return { url : sandboxUrl, title : 'Fragments', files : result.state.data.files, summary : result.state.data.summary };
+          
+  } catch (error) {
+    console.error("codeAgent failed:", error)
+
+    // Store the actual error in DB
+    await prisma.message.create({
+      data: {
+        content: `Error: ${(error as Error)?.message || "Unknown error"}`,
+        role: MessageRole.ASSISTANT,
+        type: MessageType.ERROR,
+        projectId: event.data.projectId
+      }
+    })
+
+    return {
+      url: null,
+      title: 'Error',
+      files: {},
+      summary: `Failed due to error: ${(error as Error)?.message}`
+    }
   }
+  }
+  
 );

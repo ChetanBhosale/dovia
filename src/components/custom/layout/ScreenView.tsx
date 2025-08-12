@@ -34,6 +34,8 @@ const ScreenView = ({ fragment, projectId }: Props) => {
     }
   }
 
+  console.log({project})
+
   function handleIframeLoad() {
     console.log('Iframe loaded successfully')
   }

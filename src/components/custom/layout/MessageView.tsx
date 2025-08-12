@@ -17,7 +17,7 @@ interface Props {
 
 const MessageView = ({projectId,setActiveFragment,activeFragment} : Props) => {
  const bottomRef = useRef<HTMLDivElement>(null)
- const {data,isLoading} = useGetMessages(projectId)
+ const {data,isLoading,isError,error} = useGetMessages(projectId)
  useEffect(() => {
     if(data && data.length > 0){
         bottomRef.current?.scrollIntoView()
@@ -50,11 +50,12 @@ useEffect(() => {
  const lastMessage = data?.[data.length - 1]
  const isLastMessageUser = lastMessage?.role == MessageRole.USER
 
+
   return (
     <div className='flex flex-col flex-1 h-full'>
         <div className='flex-1 z-0'>
             <ProjectHeaderView projectId={projectId} />
-            <div className='min-h-0 flex flex-col pt-3 overflow-y-auto'>
+            <div className='h-[calc(100vh-200px)] flex flex-col pt-3 overflow-y-auto'>
             {isLoading && <MessageLoader />}
             {data && data.map((message,index) => (
                 <MessageCard 
@@ -70,7 +71,10 @@ useEffect(() => {
                     type={message.type}
                 />
             ))}
-            {isLastMessageUser && <MessageLoading />}
+            {isError && <div className='flex flex-col items-center justify-center h-full'>
+              <p className='text-sm text-muted-foreground'>{error?.message || "Something went wrong please try again later!"}</p>
+            </div>}
+            {!isError && isLastMessageUser && <MessageLoading />}
             <div ref={bottomRef} />
             </div>
         </div>

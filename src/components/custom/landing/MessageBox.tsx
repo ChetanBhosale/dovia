@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
-import { useForm, useWatch } from 'react-hook-form'
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import TextareaAutosize from 'react-textarea-autosize'
 import { z } from 'zod'
@@ -19,6 +19,7 @@ const formSchema = z.object({
 
 const MessageBox = () => {
   const [isFocused, setIsFocused] = useState(false)
+  const [inputValue, setInputValue] = useState('')
   const showUsages = false
   const router = useRouter()
   const { mutate: createUserMessage, isPending, isError, error, isSuccess, data: project } = useCreateProject()
@@ -26,58 +27,81 @@ const MessageBox = () => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: { value: '' },
+    mode: 'onSubmit',
   })
 
-  const watchedValue = useWatch({ control: form.control, name: 'value' })
-  const isButtonDisabled = !watchedValue?.trim()
+  const isButtonDisabled = useMemo(() => !inputValue.trim(), [inputValue])
 
-  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+  const formClasses = useMemo(() => cn(
+    'relative border rounded-2xl transition-all duration-200 bg-muted/70',
+    isFocused && 'border-primary/50 shadow-lg shadow-primary/10',
+    showUsages && 'border-muted',
+    !isFocused && 'border-border hover:border-border/80'
+  ), [isFocused, showUsages])
+
+  const textareaClasses = useMemo(() => cn(
+    'w-full resize-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0',
+    'placeholder:text-muted-foreground text-sm sm:text-base leading-relaxed',
+    'min-h-[50px] sm:min-h-[60px] max-h-[200px] transition-all duration-200',
+    'mb-3 sm:mb-4'
+  ), [])
+
+  const submitButtonClasses = useMemo(() => cn(
+    'h-8 w-8 sm:h-10 sm:w-10 rounded-full transition-all duration-200 self-end sm:self-auto',
+    isButtonDisabled
+      ? 'bg-muted text-muted-foreground cursor-not-allowed'
+      : 'bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105'
+  ), [isButtonDisabled])
+
+  const handleFocus = useCallback(() => setIsFocused(true), [])
+  const handleBlur = useCallback(() => setIsFocused(false), [])
+
+  const handleInputChange = useCallback((value: string) => {
+    setInputValue(value)
+    form.setValue('value', value, { shouldValidate: false })
+  }, [form])
+
+  const onSubmit = useCallback(async (data: z.infer<typeof formSchema>) => {
     createUserMessage(data.value)
-  }
+  }, [createUserMessage])
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      if (inputValue.trim()) {
+        form.handleSubmit(onSubmit)()
+      }
+    }
+  }, [form, onSubmit, inputValue])
 
   useEffect(() => {
     if (isError) toast.error(error.message || 'Something went wrong, please try again')
     if (isSuccess) {
-        form.reset()
-        toast.success('Project created successfully')
-        router.push(`/project/${project.id}`)
+      form.reset()
+      setInputValue('')
+      toast.success('Project created successfully')
+      router.push(`/project/${project.id}`)
     }
-  }, [isError, error, isSuccess])
+  }, [isError, error, isSuccess, form, router, project])
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className={cn(
-          'relative border rounded-2xl transition-all duration-200 bg-muted/70',
-          isFocused && 'border-primary/50 shadow-lg shadow-primary/10',
-          showUsages && 'border-muted',
-          !isFocused && 'border-border hover:border-border/80'
-        )}
-      >
+      <form onSubmit={form.handleSubmit(onSubmit)} className={formClasses}>
         <FormField
           control={form.control}
           name="value"
-          render={({ field }) => (
+          render={({ field: { onChange, ...field } }) => (
             <div className="p-4 sm:p-6">
               <TextareaAutosize
-                disabled={isPending}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault()
-                    form.handleSubmit(onSubmit)()
-                  }
-                }}
                 {...field}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                className={cn(
-                  'w-full resize-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0',
-                  'placeholder:text-muted-foreground text-sm sm:text-base leading-relaxed',
-                  'min-h-[50px] sm:min-h-[60px] max-h-[200px] transition-all duration-200',
-                  'mb-3 sm:mb-4'
-                )}
-                placeholder="Create a new project by describing what you want to build"
+                disabled={isPending}
+                value={inputValue}
+                onChange={(e) => handleInputChange(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                className={textareaClasses}
+                placeholder="Build extreme good components here..."
               />
 
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 pt-3 sm:pt-4 border-t border-border/50">
@@ -91,7 +115,7 @@ const MessageBox = () => {
                     <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
                   </Button>
 
-                  <Button
+                  {/* <Button
                     type="button"
                     variant="outline"
                     size="sm"
@@ -100,7 +124,7 @@ const MessageBox = () => {
                     <Sparkles className="h-3 w-3 mr-1" />
                     <span className="hidden sm:inline">Choose Model</span>
                     <span className="sm:hidden">Model</span>
-                  </Button>
+                  </Button> */}
 
                   <Button
                     type="button"
@@ -119,12 +143,7 @@ const MessageBox = () => {
                   disabled={isButtonDisabled || isPending}
                   type="submit"
                   size="sm"
-                  className={cn(
-                    'h-8 w-8 sm:h-10 sm:w-10 rounded-full transition-all duration-200 self-end sm:self-auto',
-                    isButtonDisabled
-                      ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                      : 'bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105'
-                  )}
+                  className={submitButtonClasses}
                 >
                   {isPending ? (
                     <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />

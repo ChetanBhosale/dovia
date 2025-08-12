@@ -12,16 +12,12 @@ const Navbar = () => {
     const router = useRouter()
     const links = [
       {
-        label: 'Features',
-        href: '/'
-      },
-      {
         label: 'Github',
-        href: 'https://github.com/dovia-ai'
+        href: 'https://github.com/ChetanBhosale'
       },
       {
         label: 'Hire Me',
-        href: 'https://www.linkedin.com/in/dovias/'
+        href: 'https://www.linkedin.com/in/chetan-bhosale-092868231/'
       }
     ]
   return (
