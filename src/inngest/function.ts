@@ -1,8 +1,8 @@
 import { inngest } from "./client";
-import { Agent, createAgent, createNetwork, createState, createTool, gemini, type Message, openai, Tool } from "@inngest/agent-kit";
+import { createAgent, createNetwork, createState, createTool, gemini, type Message,Tool } from "@inngest/agent-kit";
 import {Sandbox} from '@e2b/code-interpreter'
 import { getSandbox, lastAssistantTextMessageContent, SANDBOX_TIMEOUT } from "./utils";
-import {json, z} from 'zod'
+import { z} from 'zod'
 import { FRAGMENT_TITLE_PROMPT, PROMPT, RESPONSE_PROMPT } from "../../prompts/prompts";
 import prisma from "@/lib/db";
 import { MessageRole, MessageType } from "@/generated/prisma";
@@ -140,7 +140,7 @@ export const codeAgent = inngest.createFunction(
           parameters : z.object({
             files : z.array(z.string()).describe('Read one or more files from the sandbox. IMPORTANT: You must provide a "files" parameter with an array of file paths. Example: readFile({files: ["src/app.js", "package.json"]})')
           }) as any,
-          handler : async({files}, {step,network}) => {
+          handler : async({files}, {step}) => {
             console.log({files})
             return await step?.run('readFile', async () => {
               try {
