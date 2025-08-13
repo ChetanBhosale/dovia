@@ -26,7 +26,7 @@ const page = () => {
       <div className='flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-16 sm:py-20'>
         <div className='flex flex-col items-center text-center  max-w-4xl mx-auto'>
           <h1 className="text-balance text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-semibold leading-none tracking-tighter sm:mb-6">
-            Ship
+            Build
             <LineShadowText className="italic ml-2" shadowColor={theme === "white" ? "black" : "white"}>
               Fast
             </LineShadowText>
