@@ -1,0 +1,11 @@
+{
+    "functions": {
+      "api/**/*": {
+        "includeFiles": "node_modules/.prisma/**/*"
+      },
+      ".next/server/**/*": {
+        "includeFiles": "node_modules/.prisma/**/*"
+      }
+    }
+  }
+  
