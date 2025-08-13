@@ -27,7 +27,7 @@ const Navbar = () => {
         <div className='flex items-center gap-1'>
           {
             links.map((link) => (
-              <Link href={link.href} key={link.label}>
+              <Link href={link.href} target='_blank' key={link.label}>
                 <Button variant='ghost' className='px-4 py-2'>
                   {link.label}
                 </Button>
