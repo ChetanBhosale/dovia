@@ -54,7 +54,7 @@ const ProjectsSection = () => {
               <Card 
                 key={project.id} 
                 className="cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-[1.02] bg-muted/70"
-                onClick={() => handleProjectClick(project.id)}
+                onClick={() => router.push(`/project/${project.id}`)}
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
@@ -75,16 +75,16 @@ const ProjectsSection = () => {
                       <Calendar className="h-4 w-4" />
                       <span>Updated {formatDistanceToNow(new Date(project.updatedAt), { addSuffix: true })}</span>
                     </div>
-                    {project.sandboxUrl && (
+
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={(e) => handleOpenSandbox(project.sandboxUrl!, e)}
+                        onClick={() => router.push(`/project/${project.id}`)}
                         className="h-8 w-8 p-0"
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>
-                    )}
+
                   </div>
                 </CardContent>
               </Card>
