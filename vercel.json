@@ -1,6 +1,6 @@
 {
     "functions": {
-      ".next/server/app/**/*.js": {
+      "api/**/*": {
         "includeFiles": "node_modules/.prisma/**/*"
       }
     }
