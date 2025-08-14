@@ -2,7 +2,7 @@
 
 import { MessageRole, MessageType } from "@/generated/prisma"
 import { inngest } from "@/inngest/client"
-import prisma from "@/lib/db"
+import prisma from "@/lib/prisma"
 import { generateSlug } from "random-word-slugs"
 import { handleAuth } from "../auth/handleAuth"
 import { redirect } from "next/navigation"

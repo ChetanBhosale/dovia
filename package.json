@@ -2,14 +2,17 @@
   "name": "dovia",
   "version": "0.1.0",
   "private": true,
-    "scripts": {
-      "dev": "next dev --turbopack",
-      "prebuild": "prisma generate && prisma migrate deploy",
-      "build": "next build",
-      "start": "next start",
-      "lint": "next lint",
-      "postinstall": "prisma generate"
-    },
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "prebuild": "prisma generate && prisma migrate deploy",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "postinstall": "prisma generate"
+  },
+  "prisma": {
+    "seed": "ts-node --compiler-options {\"module\":\"commonjs\"} prisma/seed.ts"
+  },
   "dependencies": {
     "@clerk/nextjs": "^6.30.0",
     "@clerk/themes": "^2.4.6",
@@ -17,6 +20,7 @@
     "@hookform/resolvers": "^5.2.1",
     "@inngest/agent-kit": "^0.9.0",
     "@prisma/client": "^6.10.1",
+    "@prisma/nextjs-monorepo-workaround-plugin": "^6.14.0",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-aspect-ratio": "^1.1.7",

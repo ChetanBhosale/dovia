@@ -4,7 +4,7 @@ import {Sandbox} from '@e2b/code-interpreter'
 import { getSandbox, lastAssistantTextMessageContent, SANDBOX_TIMEOUT } from "./utils";
 import { z} from 'zod'
 import { FRAGMENT_TITLE_PROMPT, PROMPT, RESPONSE_PROMPT } from "../../prompts/prompts";
-import prisma from "@/lib/db";
+import prisma from "@/lib/prisma";
 import { MessageRole, MessageType } from "@/generated/prisma";
 
 interface AgentState {

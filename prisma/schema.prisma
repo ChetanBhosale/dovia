@@ -2,15 +2,15 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
-  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl", "rhel-openssl-3.0.x"]  // Native for local dev, linux-musl for Docker/Alpine (if applicable), rhel for Vercel
+  output        = "../src/generated/prisma"  // Adjust relative to your schema location; ensures it's inside src for bundling
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum MessageRole {

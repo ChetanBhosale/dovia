@@ -1,7 +1,5 @@
-"use client"
-
 import { createMessage, getMessages } from "@/app/actions/messages/action"
-import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 export const useGetMessages = (projectId : string) => {
     return useQuery({

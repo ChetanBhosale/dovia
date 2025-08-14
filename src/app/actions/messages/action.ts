@@ -2,8 +2,7 @@
 
 import { MessageRole, MessageType } from "@/generated/prisma"
 import { inngest } from "@/inngest/client"
-import prisma from "@/lib/db"
-import { currentUser } from "@clerk/nextjs/server"
+import prisma from "@/lib/prisma"
 import { handleAuth } from "../auth/handleAuth"
 
 
