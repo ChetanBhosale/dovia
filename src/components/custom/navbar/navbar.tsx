@@ -17,7 +17,7 @@ const Navbar = () => {
       },
       {
         label: 'Hire Me',
-        href: 'https://www.linkedin.com/in/chetan-bhosale-092868231/'
+        href: 'https://chetan-bhosale.vercel.app'
       }
     ]
   return (
